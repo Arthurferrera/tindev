@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import io from 'socket.io-client';
 import { Link } from 'react-router-dom';
 import './main.css';
 
@@ -7,6 +8,7 @@ import api from '../services/api';
 import logo from '../assets/logo.svg';
 import deslike from '../assets/deslike.svg';
 import like from '../assets/like.svg';
+import itsamatch from '../assets/itsamatch.png';
 
 // macth - possui todos os parametros passados na url
 export default function Main({ match }) {
@@ -14,6 +16,7 @@ export default function Main({ match }) {
   /* sempre que for necessário alterar o valor da variavel, mesmo sendo um array, é necessário fazer
    isso através do 'método' set */
   const [devs, setDevs] = useState([]);
+  const [matchDev, setMatchDev] = useState(null)
 
   // parametros do useEffect
   // 1 - a função que está sendo chamada (pode ser uma arrow function)
@@ -31,6 +34,31 @@ export default function Main({ match }) {
     }
 
     loadUsers();
+  }, [match.params.id]);
+
+  useEffect(() => {
+    const socket = io('http://localhost:3333', {
+      // query são parâmetros adicionais que podemos enviar na conexão
+      query: { user: match.params.id }
+    });
+
+    socket.on('match', dev => {
+      setMatchDev(dev);
+      
+    });
+
+    // ************ EXEMPLO **************
+    // // escutando um evento disparado pelo back end, definindo o tipo de requisição e a arrow function trabalha o que foi recebido (objeto, string...)
+    // socket.on('world', message => {
+    //   console.log(message);
+    // })
+
+    // // disparando um evento que envia informações para o back end, definindo o tipo/nome da requisição e o dado que será enviado (objeto, string...)
+    // setTimeout(() => {
+    //   socket.emit('hello', {
+    //     message: 'Hello World'
+    //   })
+    // }, 3000)
   }, [match.params.id]);
 
   async function handleLike(id) {
@@ -93,6 +121,19 @@ export default function Main({ match }) {
           Acabou ;(
         </div>
       ) }
+
+      {
+        matchDev && (
+          <div className="match-container">
+            <img src={itsamatch} alt="It's a match" />
+            <img className="avatar" src={matchDev.avatar} alt={matchDev.name} />
+            <strong>{matchDev.name}</strong>
+            <p>{matchDev.bio}</p>
+
+            <button type="button" onClick={() => setMatchDev(null)}>FECHAR</button>
+          </div>
+        )
+      }
 
     </div>
   );
